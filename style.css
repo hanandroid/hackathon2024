@@ -1,0 +1,85 @@
+@charset "utf-8";
+    body {
+        background-image: url("image/emotionBack.png");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center;
+        font-family: 'Arial', sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+    }
+    .container {
+        background-color: #ffffff;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+        padding: 20px;
+        width: 400px;
+        text-align: center;
+    }
+    h1 {
+        font-size: 24px;
+        margin-bottom: 20px;
+    }
+    .buttons {
+        display: flex;
+        justify-content: space-around;
+        margin-bottom: 20px;
+    }
+    button {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 16px;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #ddd;
+    }
+    #webcam-container {
+        border: 1px solid red;
+    }   
+    #start {
+        background-color: #4CAF50;
+        color: white;
+    }
+    #stop {
+        background-color: #f44336;
+        color: white;
+    }
+    #send {
+        background-color: #008CBA;
+        color: white;
+    }
+    .webcam {
+        margin-bottom: 20px;
+    }
+    .emotions {
+        text-align: left;
+    }
+    .emotion-bar {
+        display: flex;
+        align-items: center;
+        margin-bottom: 5px;
+    }
+    .emotion-name {
+        width: 100px;
+    }
+    .bar {
+        width: 200px;
+        height: 10px;
+        background-color: #ddd;
+        margin-left: 10px;
+        position: relative;
+    }
+    .bar-fill {
+        height: 100%;
+        background-color: #4CAF50;
+        width: 0%;
+    }

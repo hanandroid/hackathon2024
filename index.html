@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Detection Web Interface</title>
+    <link rel="stylesheet" href="style.css" type="text/css">
+
+</head>
+<body>
+
+<div class="container">
+    <h1>Detect Your Emotion</h1>
+    <div class="buttons">
+        <button id="start" type="button" onclick="start()">Start</button>
+        <button id="stop" type="button" onclick="stop()">Stop</button>
+        <button id="send" type="button" onclick="sendDataToLambda()">Send Result</button>
+    </div>
+
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+        // More API functions here:
+        // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
+    
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "./my_model/";
+    
+        let fStart = true;
+        let model, webcam, labelContainer, maxPredictions;
+        let labelResult, preDate;
+    
+        // control button
+        function start() { fStart = true; }
+        function stop() { fStart = false; }
+          
+        // start WebCarmer
+        init();
+
+        // Emotion data
+        let emotions = [0,0,0,0,0,0,0.0];
+
+        // Update bars dynamically
+        function updateEmotionBars() {
+            document.getElementById("anger-bar").style.width = emotions[0]+ "%";
+            document.getElementById("contempt-bar").style.width = emotions[1] + "%";
+            document.getElementById("disgust-bar").style.width = emotions[2] + "%";
+            document.getElementById("fear-bar").style.width = emotions[3] + "%";
+            document.getElementById("happy-bar").style.width = emotions[4]+ "%";
+            document.getElementById("neutral-bar").style.width = emotions[5] + "%";
+            document.getElementById("sad-bar").style.width = emotions[6]+ "%";
+            document.getElementById("surprise-bar").style.width = emotions[7]+ "%";
+        }
+
+        // Load the image model and setup the webcam
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+    
+            // load the model and metadata
+            // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
+            // Note: the pose library adds "tmImage" object to your window (window.tmImage)
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+    
+            // Convenience function to setup a webcam
+            const flip = true; // whether to flip the webcam
+            webcam = new tmImage.Webcam(350, 250, flip); // width, height, flip
+            await webcam.setup(); // request access to the webcam
+            await webcam.play();
+            window.requestAnimationFrame(loop);
+    
+            // append elements to the DOM
+            document.getElementById("webcam-container").appendChild(webcam.canvas);
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) { // and class labels
+                labelContainer.appendChild(document.createElement("div"));
+            }
+            labelResult = document.getElementById("label-result");
+        }
+    
+        async function loop() {
+            webcam.update(); // update the webcam frame
+            if(fStart) {
+                await predict();
+                labelResult.innerHTML = "";
+            }
+            window.requestAnimationFrame(loop);
+        }
+    
+        // run the webcam image through the image model
+        async function predict() {
+            // predict can take in an image, video or canvas html element
+            const prediction = await model.predict(webcam.canvas);
+            preDate = "";
+            for (let i = 0; i < maxPredictions; i++) {
+                const classPrediction = prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                // labelContainer.childNodes[i].innerHTML = classPrediction;
+
+                preDate += classPrediction + ', ';
+                emotions[i] = prediction[i].probability.toFixed(2) * 100;
+
+            }
+
+
+            updateEmotionBars();
+        }
+
+        const sendDataToLambda = async () => {
+            preDate += "nomal: 0.0";
+            const data = { message: preDate };
+            labelResult.innerHTML = "Send Data = " + preDate;
+    
+            const response = await fetch('https://5akmp6zn1l.execute-api.ap-northeast-1.amazonaws.com/default/imgPredic', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            });
+    
+            const result = await response.json();
+            console.log(result);
+        };
+
+
+    </script>
+    
+    <br>
+    <div class="emotions">
+        <div class="emotion-bar">
+            <span class="emotion-name">Anger</span>
+            <div class="bar"><div class="bar-fill" id="anger-bar"></div></div>
+        </div>
+        <div class="emotion-bar">
+            <span class="emotion-name">Contempt</span>
+            <div class="bar"><div class="bar-fill" id="contempt-bar"></div></div>
+        </div>
+        <div class="emotion-bar">
+            <span class="emotion-name">Disgust</span>
+            <div class="bar"><div class="bar-fill" id="disgust-bar"></div></div>
+        </div>
+        <div class="emotion-bar">
+            <span class="emotion-name">Fear</span>
+            <div class="bar"><div class="bar-fill" id="fear-bar"></div></div>
+        </div>
+        <div class="emotion-bar">
+            <span class="emotion-name">Happy</span>
+            <div class="bar"><div class="bar-fill" id="happy-bar"></div></div>
+        </div>
+        <div class="emotion-bar">
+            <span class="emotion-name">Neutral</span>
+            <div class="bar"><div class="bar-fill" id="neutral-bar"></div></div>
+        </div>
+        <div class="emotion-bar">
+            <span class="emotion-name">Sad</span>
+            <div class="bar"><div class="bar-fill" id="sad-bar"></div></div>
+        </div>
+        <div class="emotion-bar">
+            <span class="emotion-name">Surprise</span>
+            <div class="bar"><div class="bar-fill" id="surprise-bar"></div></div>
+        </div>
+    </div>
+    <div id="label-result"></div>
+</div>
+
+</body>
+</html>
